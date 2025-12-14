@@ -35,6 +35,8 @@ const AdminDashboardHome = () => {
 
   if (loading) return <LoadingPage />;
 
+  
+
   // ===== General Stats =====
   const totalUsers = dbUser?.length ?? 0;
   const totalLessons = lessons?.length ?? 0;

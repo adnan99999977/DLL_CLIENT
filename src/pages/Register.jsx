@@ -9,8 +9,7 @@ import useAxios from "../api/useAxios";
 
 const Register = () => {
   const { imageURL, isUploading, fileName, uploadFile } = useImageUpload();
-      const axiosApi = useAxios();
-
+  const axiosApi = useAxios();
 
   const {
     register,
@@ -31,91 +30,96 @@ const Register = () => {
   };
 
   const handleGoogle = async () => {
-  try {
-    const result = await signInViaGoogle();
-    const user = result.user;
+    try {
+      const result = await signInViaGoogle();
+      const user = result.user;
 
-    // DB-ready user object
-    const googleUserData = {
-      uid: user.uid,                     // Firebase UID
-      name: user.displayName || "No Name",
-      email: user.email,
-      photoURL: user.photoURL,
-      role: "user",                      // lowercase
-      plan: "free",                      // lowercase
-      isPremium: false,
-      totalLessons: 0,
-      totalFavorites: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+      // DB-ready user object
+      const googleUserData = {
+        uid: user.uid, // Firebase UID
+        name: user.displayName || "No Name",
+        email: user.email,
+        photoURL: user.photoURL,
+        role: "user", // lowercase
+        plan: "free", // lowercase
+        isPremium: false,
+        totalLessons: 0,
+        totalFavorites: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-    // Check if user already exists in DB
-    const res = await axiosApi.post("/users/google", googleUserData);
+      // Check if user already exists in DB
+      const res = await axiosApi.post("/users/google", googleUserData);
 
-    console.log("✅ Google user DB response:", res.data);
-    alert("Google login successful!");
+      console.log("✅ Google user DB response:", res.data);
+      alert("Google login successful!");
 
-    // Optionally set user to context/localStorage
-    localStorage.setItem("user", JSON.stringify(res.data.user));
-
-  } catch (error) {
-    console.error("❌ Google login failed:", error.response?.data || error);
-  }
-};
+      // Optionally set user to context/localStorage
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+    } catch (error) {
+      console.error("❌ Google login failed:", error.response?.data || error);
+    }
+  };
 
   const handleRegister = async (data) => {
-  if (!imageURL) {
-    alert(
-      isUploading
-        ? "Image is still uploading. Please wait."
-        : "Please upload a profile image first!"
-    );
-    return;
-  }
+    if (!imageURL) {
+      alert(
+        isUploading
+          ? "Image is still uploading. Please wait."
+          : "Please upload a profile image first!"
+      );
+      return;
+    }
 
-  try {
-    const { confirmPassword, ...userData } = data;
+    try {
+      const { confirmPassword, ...userData } = data;
 
-    // 1️⃣ Create user in Firebase Auth
-    const userCredential = await registerUser(userData.email, userData.password);
-    const currentUser = userCredential.user;
+      // 1️⃣ Create user in Firebase Auth
+      const userCredential = await registerUser(
+        userData.email,
+        userData.password
+      );
+      const currentUser = userCredential.user;
 
-    // 2️⃣ Update Firebase Profile
-    await updateUser(currentUser, {
-      displayName: userData.userName,
-      photoURL: imageURL,
-    });
+      // 2️⃣ Update Firebase Profile
+      await updateUser(currentUser, {
+        displayName: userData.userName,
+        photoURL: imageURL,
+      });
 
-    // 3️⃣ DB-ready user object
-    const registrationData = {
-      uid: currentUser.uid,
-      name: userData.userName,
-      email: userData.email,
-      photoURL: imageURL,
-      role: "user",
-      plan: "free",
-      isPremium: false,
-      totalLessons: 0,
-      totalFavorites: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+      // 3️⃣ Prepare user object for DB (same as Google login)
+      const registrationData = {
+        uid: currentUser.uid, // Firebase UID
+        name: userData.userName,
+        email: userData.email,
+        photoURL: imageURL,
+        role: "user",
+        plan: "free",
+        isPremium: false,
+        totalLessons: 0,
+        totalFavorites: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-    // 4️⃣ Save to DB
-    const res = await axiosApi.post("/users", registrationData);
+      // 4️⃣ Save to DB
+      const res = await axiosApi.post("/users", registrationData);
 
-    console.log("✅ Registration DB response:", res.data);
-    alert("Registration successful!");
+      console.log("✅ Registration DB response:", res.data);
+      alert("Registration successful!");
 
-    // Optionally set user in context/localStorage
-    setUser({ ...currentUser, name: userData.userName, photoURL: imageURL });
-    localStorage.setItem("user", JSON.stringify(res.data.user));
-
-  } catch (err) {
-    console.error("❌ Registration failed:", err.response?.data || err.message);
-  }
-};
+      // 5️⃣ Set user in context/localStorage (same as Google login)
+      setUser(res.data.user);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+    } catch (err) {
+      console.error(
+        "❌ Registration failed:",
+        err.response?.data || err.message
+      );
+      alert("Registration failed! Try again.");
+    }
+  };
 
   const password = watch("password");
 

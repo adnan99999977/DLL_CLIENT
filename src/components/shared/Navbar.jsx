@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useContext } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import Logo from "../../utils/logo/Logo";
 import Button from "./Button";
 import { AuthContext } from "../../auth/AuthContext";
@@ -7,10 +7,12 @@ import useDbData from "../../hooks/useDbData";
 
 const Navbar = () => {
   const { logOut, user } = useContext(AuthContext);
-  const { dbUser } = useDbData();
+  const { navUser } = useDbData();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
+  // Close dropdown if click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -24,13 +26,16 @@ const Navbar = () => {
   const handleLogout = () => {
     logOut();
     setDropdownOpen(false);
+    navigate("/log-in");
   };
 
+  // Common public links
   const commonNavItems = [
     { name: "Home", path: "/" },
     { name: "Public Lessons", path: "/public-lessons" },
   ];
 
+  // Role-based links
   const roleNavItems = {
     admin: [{ name: "Admin Dashboard", path: "/admin-dashboard" }],
     user: [
@@ -40,10 +45,23 @@ const Navbar = () => {
       { name: "Dashboard", path: "/dashboard" },
     ],
   };
-  const currentRole =  dbUser?.role ? 'user' : 'admin'
+
+  // Determine which links to show
+  let navItemsToShow = [...commonNavItems]; // start with public links
+
+  if (user && navUser?.role) {
+    // Logged in
+    navItemsToShow = [...commonNavItems, ...(roleNavItems[navUser.role] || [])];
+  } else if (!user) {
+    // Logged out
+    navItemsToShow = [
+      ...commonNavItems,
+      ...roleNavItems.user.filter((item) => item.name !== "Dashboard"), // hide Dashboard
+    ];
+  }
 
   return (
-    <div className=" md:w-[1200px] fixed top-2 md:left-7 border border-gray-300 rounded-full bg-transparent backdrop-blur-md z-100 mx-auto  shadow-2xl">
+    <div className="md:w-[1200px] fixed top-2 md:left-7 border border-gray-300 rounded-full bg-transparent backdrop-blur-md z-100 mx-auto shadow-2xl">
       <div className="navbar md:px-8 px-3 transition-all duration-300 ease-in-out">
         {/* LEFT */}
         <div className="navbar-start flex items-center gap-2">
@@ -70,12 +88,11 @@ const Navbar = () => {
               </svg>
             </div>
 
-            {/* Mobile Dropdown */}
             <ul
               tabIndex={0}
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[999] mt-3 w-52 p-2 shadow-lg animate-slide-down"
             >
-              {commonNavItems.map((item) => (
+              {navItemsToShow.map((item) => (
                 <li
                   key={item.name}
                   className="hover:bg-blue-100 transition-colors rounded-md"
@@ -83,27 +100,17 @@ const Navbar = () => {
                   <NavLink to={item.path}>{item.name}</NavLink>
                 </li>
               ))}
-
-              {roleNavItems[currentRole].map((item) => {
-                if (!user && item.path === "/dashboard") return null; // hide /dashboard if no user
-                return (
-                  <li
-                    key={item.name}
-                    className="hover:bg-blue-100 transition-colors rounded-md"
-                  >
-                    <NavLink to={item.path}>{item.name}</NavLink>
-                  </li>
-                );
-              })}
             </ul>
           </div>
+
           {/* Logo */}
           <Logo />
         </div>
+
         {/* CENTER */}
         <div className="navbar-center hidden lg:flex">
           <ul className="flex gap-6">
-            {commonNavItems.map((item) => (
+            {navItemsToShow.map((item) => (
               <li key={item.name} className="group">
                 <NavLink
                   to={item.path}
@@ -113,20 +120,6 @@ const Navbar = () => {
                 </NavLink>
               </li>
             ))}
-
-            {roleNavItems[currentRole].map((item) => {
-              if (!dbUser && item.path === "/dashboard") return null; // hide /dashboard if no user
-              return (
-                <li key={item.name} className="group">
-                  <NavLink
-                    to={item.path}
-                    className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
-                  >
-                    {item.name}
-                  </NavLink>
-                </li>
-              );
-            })}
           </ul>
         </div>
 
@@ -172,7 +165,8 @@ const Navbar = () => {
                     >
                       Profile
                     </Link>
-                    {currentRole === "admin" ? (
+
+                    {navUser?.role === "admin" ? (
                       <Link
                         to="/admin-dashboard"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors rounded-md"

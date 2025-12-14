@@ -8,7 +8,7 @@ import useAxios from "../../api/useAxios";
 
 const MyLessons = () => {
   const axiosApi = useAxios();
-  const { user, loading, error, lessons, formatDateTime } = useCurrentUser();
+  const { user, loading, error, lessons } = useCurrentUser();
   const navigate = useNavigate();
 
   const toggleVisibility = async (id) => {
@@ -21,6 +21,12 @@ const MyLessons = () => {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return date.toLocaleString();
   };
 
   const toggleAccess = async (id) => {

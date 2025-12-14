@@ -136,6 +136,9 @@ const PublicLessonsDetails = () => {
       const res = await axiosApi.post("/favorites", {
         userId: user._id,
         lessonId: lesson._id,
+        lessonTitle: lesson.title,
+        lessonDescription: lesson.description,
+        lessonImage: lesson.userImage,
       });
 
       // If added successfully
@@ -354,7 +357,7 @@ const PublicLessonsDetails = () => {
                   <div key={c._id} className="bg-gray-100 p-2 rounded">
                     <div className="flex items-center gap-2 mb-1">
                       <img
-                        src={user.photoURL || './default-avatar.png'}
+                        src={user.photoURL || "./default-avatar.png"}
                         className="w-8 h-8 rounded-full"
                         alt=""
                       />

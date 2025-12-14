@@ -6,9 +6,11 @@ const useDbData = () => {
   const { currentUser } = useContext(AuthContext);
   const [dbUser, setDbUser] = useState(null);
   const [lessons, setLessons] = useState([]);
-  const axiosApi = useAxios();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [navUser, setNavUser] = useState(null);
+
+  const axiosApi = useAxios();
 
   const formatDateTime = (date) => {
     return new Intl.DateTimeFormat("en-US", {
@@ -20,32 +22,41 @@ const useDbData = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!currentUser?.email) return setLoading(true);
+      if (!currentUser?.email) {
+        setDbUser(null);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
       try {
-        // fetching user
-        const userRes = await axiosApi.get("/users");
-        setDbUser(userRes.data);
+        // Logged-in user fetch
+        const userRes = await axiosApi.get(`/users?email=${currentUser.email}`);
+        setNavUser(userRes.data || null);
 
-        // Fetch lessons for this user
-        const lessonsRes = await axiosApi.get("/lessons");
-        setLessons(lessonsRes.data);
+        const userRese = await axiosApi.get(`/users`);
+        setDbUser(userRese.data || null);
 
-        // fetching reported lessons
-        const reportedLessonRes = await axiosApi.get("/reported-lessons");
-        setReports(reportedLessonRes.data);
+        // Lessons
+        const lessonsRes = await axiosApi.get(`/lessons`);
+        setLessons(lessonsRes.data || []);
 
-        // get contributors by email
+        // Reports
+        const reportsRes = await axiosApi.get(
+          `/reported-lessons?email=${currentUser.email}`
+        );
+        setReports(reportsRes.data || []);
       } catch (err) {
-        console.error("Failed to fetch user or lessons:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [currentUser]);
+  }, [currentUser, axiosApi]);
 
-  return { dbUser, lessons, reports, loading, formatDateTime };
+  return { dbUser, navUser, lessons, reports, loading, formatDateTime };
 };
 
 export default useDbData;

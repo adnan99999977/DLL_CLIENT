@@ -23,6 +23,7 @@ import LoadingPage from "../../components/shared/LoadingPage";
 import { Link } from "react-router-dom";
 import useCurrentUser from "../../hooks/useCurrentUser";
 import { AuthContext } from "../../auth/AuthContext";
+import useCurrentUserFav from "../../hooks/useCurrentUserFav";
 
 ChartJS.register(
   CategoryScale,
@@ -37,6 +38,7 @@ const DashboardHome = () => {
   const [chartView, setChartView] = useState("weekly");
   const { loading, lessons } = useCurrentUser();
   const { user } = useContext(AuthContext);
+  const { favorites } = useCurrentUserFav();
 
   const stats = {
     totalLessons: lessons.length,
@@ -59,6 +61,14 @@ const DashboardHome = () => {
     if (dayDiff < 7) stats.weeklyData[6 - dayDiff] += 1;
     if (weekDiff < 4) stats.monthlyData[3 - weekDiff] += 1;
   });
+
+  favorites?.forEach((fav) => {
+  const created = new Date(fav.createdAt);
+  const dayDiff = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+  const weekDiff = Math.floor(dayDiff / 7);
+  if (dayDiff < 7) stats.weeklyDataFavorites[6 - dayDiff] += 1;
+  if (weekDiff < 4) stats.monthlyDataFavorites[3 - weekDiff] += 1;
+});
 
   // ===== CHART DATA =====
   const chartData =
@@ -142,7 +152,7 @@ const DashboardHome = () => {
         <StatCard
           icon={<Heart size={20} />}
           label="Favorites"
-          value={lessons[0]?.favoritesCount || 0}
+          value={favorites?.length || 0}
           color="from-pink-500 to-rose-500"
         />
 
@@ -211,11 +221,7 @@ const DashboardHome = () => {
               value={lessons?.length}
               color="bg-indigo-500"
             />
-            <MiniStat
-              label="Favorites"
-              value={lessons[0]?.favoritesCount}
-              color="bg-pink-500"
-            />
+            
           </div>
           <div className="flex gap-2">
             <button
