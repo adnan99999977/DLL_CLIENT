@@ -18,7 +18,11 @@ const PublicLessons = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const lessonsPerPage = 8; // Number of lessons per page
 
-  const { data: lessons = [], isLoading, isError } = useQuery({
+  const {
+    data: lessons = [],
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["lessons"],
     queryFn: async () => {
       const res = await axiosApi.get("/lessons");
@@ -37,15 +41,23 @@ const PublicLessons = () => {
           l.title.toLowerCase().includes(search.toLowerCase())
       )
       .sort((a, b) => {
-        if (sortOption === "Newest") return new Date(b.createdAt) - new Date(a.createdAt);
-        if (sortOption === "Most Saved") return (b.savedCount || 0) - (a.savedCount || 0);
+        if (sortOption === "Newest")
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        if (sortOption === "Most Saved")
+          return (b.savedCount || 0) - (a.savedCount || 0);
         return 0;
       });
   }, [lessons, search, categoryFilter, toneFilter, sortOption]);
 
   // Get unique categories & tones
-  const categories = useMemo(() => ["All", ...new Set(lessons.map((l) => l.category))], [lessons]);
-  const tones = useMemo(() => ["All", ...new Set(lessons.map((l) => l.emotionalTone))], [lessons]);
+  const categories = useMemo(
+    () => ["All", ...new Set(lessons.map((l) => l.category))],
+    [lessons]
+  );
+  const tones = useMemo(
+    () => ["All", ...new Set(lessons.map((l) => l.emotionalTone))],
+    [lessons]
+  );
 
   // ----- Pagination calculation -----
   const totalPages = Math.ceil(filteredLessons.length / lessonsPerPage);
@@ -55,7 +67,7 @@ const PublicLessons = () => {
   );
 
   // ----- Early returns -----
-  if (isLoading || !user) return <LoadingPage />;
+  if (isLoading) return <LoadingPage />;
   if (isError) return <div>Error loading lessons</div>;
 
   return (
@@ -111,15 +123,24 @@ const PublicLessons = () => {
       {/* Lessons Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {paginatedLessons.map((lesson) => {
-          const isLocked = lesson.accessLevel === "Premium" && !user.isPremium;
+         const isLocked = lesson.accessLevel === "Premium" && !(user?.isPremium);
+
           return (
             <div
               key={lesson._id}
               className="relative flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300"
             >
-              <div className={`w-full h-44 overflow-hidden ${isLocked ? "filter blur-sm brightness-75" : ""}`}>
+              <div
+                className={`w-full h-44 overflow-hidden ${
+                  isLocked ? "filter blur-sm brightness-75" : ""
+                }`}
+              >
                 {lesson.userImage ? (
-                  <img src={lesson.userImage} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={lesson.userImage}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 font-semibold">
                     No Image
@@ -135,11 +156,17 @@ const PublicLessons = () => {
                 >
                   {lesson.title}
                 </h2>
-                <p className={`text-gray-500 text-sm mb-3 ${isLocked ? "blur-sm brightness-75" : ""}`}>
+                <p
+                  className={`text-gray-500 text-sm mb-3 ${
+                    isLocked ? "blur-sm brightness-75" : ""
+                  }`}
+                >
                   {lesson.description.slice(0, 100)}...
                 </p>
                 <div className="flex justify-between items-center mt-3">
-                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">{lesson.category}</span>
+                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                    {lesson.category}
+                  </span>
                   {lesson.accessLevel === "Premium" && (
                     <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-semibold flex items-center gap-1">
                       <Lock size={14} /> Premium
@@ -156,9 +183,13 @@ const PublicLessons = () => {
                       alt={lesson.creatorName}
                       className="w-8 h-8 rounded-full object-cover"
                     />
-                    <span className="text-gray-600 text-sm">{lesson.creatorName}</span>
+                    <span className="text-gray-600 text-sm">
+                      {lesson.creatorName}
+                    </span>
                   </div>
-                  <span className="text-gray-400 text-xs">{new Date(lesson.createdAt).toLocaleDateString()}</span>
+                  <span className="text-gray-400 text-xs">
+                    {new Date(lesson.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
 
                 {isLocked ? (
@@ -188,7 +219,9 @@ const PublicLessons = () => {
               key={page}
               onClick={() => setCurrentPage(page)}
               className={`px-4 py-2 rounded-lg border ${
-                currentPage === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
+                currentPage === page
+                  ? "bg-blue-500 text-white"
+                  : "bg-white text-gray-700"
               }`}
             >
               {page}
