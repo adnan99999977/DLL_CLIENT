@@ -15,6 +15,19 @@ import useCurrentUser from "../../hooks/useCurrentUser";
 import useDbData from "../../hooks/useDbData";
 import LoadingPage from "../../components/shared/LoadingPage";
 import useAxios from "../../api/useAxios";
+import { Filler } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, Filler);
+
 
 const AdminProfile = () => {
   const { user, loading, error } = useCurrentUser();
@@ -171,7 +184,6 @@ const AdminProfile = () => {
               <Crown size={14} /> Admin
             </span>
           </div>
-
           <p className="text-gray-500 flex items-center justify-center md:justify-start gap-1 mt-1">
             <Mail size={14} /> {userData.email}
           </p>
