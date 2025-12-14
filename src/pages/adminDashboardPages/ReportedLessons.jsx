@@ -1,33 +1,40 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingPage from "../../components/shared/LoadingPage";
-import useDbData from "../../hooks/useDbData";
 import useAxios from "../../api/useAxios";
 
 const ReportedLessons = () => {
-  const { reports, loading } = useDbData();
-  const [localReports, setLocalReports] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [modalData, setModalData] = useState(null);
   const axiosApi = useAxios();
 
-  // sync db reports → local state
+  // Fetch reported lessons
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosApi.get("/reported-lessons");
+      setReports(res.data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to fetch reported lessons");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    setLocalReports(reports);
-  }, [reports]);
+    fetchReports();
+  }, []);
 
   const openModal = (lesson) => setModalData(lesson);
   const closeModal = () => setModalData(null);
 
-  // delete lesson
   const handleDelete = async (lessonId) => {
-    const ok = window.confirm("Are you sure you want to delete this lesson?");
-    if (!ok) return;
-
+    if (!window.confirm("Are you sure you want to delete this lesson?")) return;
     try {
       await axiosApi.delete(`/lessons/${lessonId}`);
-      setLocalReports((prev) =>
-        prev.filter((l) => l.lessonId !== lessonId)
-      );
+      setReports((prev) => prev.filter((l) => l.lessonId !== lessonId));
       closeModal();
       alert("Lesson deleted");
     } catch (err) {
@@ -36,13 +43,10 @@ const ReportedLessons = () => {
     }
   };
 
-  // ignore reports
   const handleIgnore = async (lessonId) => {
     try {
       await axiosApi.patch(`/lessonsReports/${lessonId}/ignore`);
-      setLocalReports((prev) =>
-        prev.filter((l) => l.lessonId !== lessonId)
-      );
+      setReports((prev) => prev.filter((l) => l.lessonId !== lessonId));
       closeModal();
       alert("Reports ignored");
     } catch (err) {
@@ -55,14 +59,10 @@ const ReportedLessons = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 min-h-screen space-y-6">
-      <h1 className="text-3xl font-bold text-center">
-        🚨 Reported / Flagged Lessons
-      </h1>
+      <h1 className="text-3xl font-bold text-center">🚨 Reported / Flagged Lessons</h1>
 
-      {localReports.length === 0 ? (
-        <p className="text-center text-gray-500">
-          No reported lessons found
-        </p>
+      {reports.length === 0 ? (
+        <p className="text-center text-gray-500">No reported lessons found</p>
       ) : (
         <div className="overflow-x-auto bg-white shadow rounded-lg">
           <table className="min-w-full divide-y">
@@ -74,22 +74,11 @@ const ReportedLessons = () => {
                 <th className="px-6 py-3 text-center">Actions</th>
               </tr>
             </thead>
-
             <tbody className="divide-y">
-              {localReports.map((lesson) => (
-                <motion.tr
-                  key={lesson.lessonId}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <td className="px-6 py-4 font-medium">
-                    {lesson.lessonTitle}
-                  </td>
-
-                  <td className="px-6 py-4 text-center text-red-600 font-bold">
-                    {lesson.count}
-                  </td>
-
+              {reports.map((lesson) => (
+                <motion.tr key={lesson.lessonId} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <td className="px-6 py-4 font-medium">{lesson.lessonTitle}</td>
+                  <td className="px-6 py-4 text-center text-red-600 font-bold">{lesson.count}</td>
                   <td className="px-6 py-4 text-center">
                     <button
                       onClick={() => openModal(lesson)}
@@ -98,7 +87,6 @@ const ReportedLessons = () => {
                       View Reasons
                     </button>
                   </td>
-
                   <td className="px-6 py-4 text-center space-x-2">
                     <button
                       onClick={() => handleIgnore(lesson.lessonId)}
@@ -120,7 +108,7 @@ const ReportedLessons = () => {
         </div>
       )}
 
-      {/* MODAL */}
+      {/* Modal */}
       <AnimatePresence>
         {modalData && (
           <motion.div
@@ -135,34 +123,20 @@ const ReportedLessons = () => {
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
             >
-              <h2 className="text-xl font-bold mb-4">
-                {modalData.lessonTitle}
-              </h2>
-
+              <h2 className="text-xl font-bold mb-4">{modalData.lessonTitle}</h2>
               {modalData.reasons?.length === 0 ? (
                 <p className="text-gray-500">No reasons found</p>
               ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-2 max-h-96 overflow-y-auto">
                   {modalData.reasons.map((r, idx) => (
-                    <li
-                      key={idx}
-                      className="border p-2 rounded"
-                    >
-                      <p className="text-sm font-medium">
-                        {r.userEmail}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        {r.reason}
-                      </p>
+                    <li key={idx} className="border p-2 rounded">
+                      <p className="text-sm font-medium">{r.userEmail}</p>
+                      <p className="text-xs text-gray-600">{r.reason}</p>
                     </li>
                   ))}
                 </ul>
               )}
-
-              <button
-                onClick={closeModal}
-                className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
-              >
+              <button onClick={closeModal} className="mt-4 px-4 py-2 bg-red-500 text-white rounded">
                 Close
               </button>
             </motion.div>

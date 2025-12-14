@@ -9,8 +9,8 @@ const useDbData = () => {
   const axiosApi = useAxios();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-   const formatDateTime = (date) => {
+
+  const formatDateTime = (date) => {
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "long",
@@ -18,29 +18,23 @@ const useDbData = () => {
     }).format(new Date(date));
   };
 
-
   useEffect(() => {
     const fetchData = async () => {
-
       if (!currentUser?.email) return setLoading(true);
       try {
         // fetching user
         const userRes = await axiosApi.get("/users");
         setDbUser(userRes.data);
 
-        
-
         // Fetch lessons for this user
         const lessonsRes = await axiosApi.get("/lessons");
         setLessons(lessonsRes.data);
 
         // fetching reported lessons
-        const reportedLessonRes = await axiosApi.get("/lessonsReports");
+        const reportedLessonRes = await axiosApi.get("/reported-lessons");
         setReports(reportedLessonRes.data);
 
-        // get contributors by email 
-
-
+        // get contributors by email
       } catch (err) {
         console.error("Failed to fetch user or lessons:", err);
       } finally {
@@ -50,8 +44,8 @@ const useDbData = () => {
 
     fetchData();
   }, [currentUser]);
-    
-  return { dbUser, lessons, reports, loading,formatDateTime };
+
+  return { dbUser, lessons, reports, loading, formatDateTime };
 };
 
 export default useDbData;

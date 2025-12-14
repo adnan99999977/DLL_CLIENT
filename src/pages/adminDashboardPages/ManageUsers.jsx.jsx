@@ -3,63 +3,69 @@ import LoadingPage from "../../components/shared/LoadingPage";
 import useDbData from "../../hooks/useDbData";
 import useAxios from "../../api/useAxios";
 
-const PROTECTED_ADMIN_EMAIL = "adminadnan@gmail.com";
+const PROTECTED_ADMIN_EMAIL = "admin@gmail.com";
 
 const ManageUsers = () => {
   const { dbUser, loading } = useDbData();
   const [localUsers, setLocalUsers] = useState([]);
   const axiosApi = useAxios();
-
-  // sync hook data to local state
+  const [updatingUserId, setUpdatingUserId] = useState(null);
+  console.log(localUsers)
   useEffect(() => {
     if (dbUser) setLocalUsers(Array.isArray(dbUser) ? dbUser : [dbUser]);
   }, [dbUser]);
 
-  // Toggle user role
+  // ==================== UPDATE ROLE ====================
   const toggleRole = async (id) => {
     const user = localUsers.find((u) => u._id === id);
     if (!user) return;
 
-    // prevent role change for protected admin
     if (user.email === PROTECTED_ADMIN_EMAIL) {
       alert("Cannot change role of protected admin!");
       return;
     }
 
-    const newRole = user.role === "User" ? "Admin" : "User";
+    const newRole = user.role === "user" ? "admin" : "user";
+    setUpdatingUserId(id);
 
     try {
-      await axiosApi.patch(`/users/${id}`, { role: newRole });
-      setLocalUsers(
-        localUsers.map((u) => (u._id === id ? { ...u, role: newRole } : u))
+      const response = await axiosApi.patch(`/users/${id}`, { role: newRole });
+      setLocalUsers((prev) =>
+        prev.map((u) => (u._id === id ? { ...u, role: response.data.role } : u))
       );
       alert(`User role updated to ${newRole}`);
     } catch (err) {
       console.error("Failed to update role:", err);
       alert("Failed to update role");
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
-  // Delete user
+  // ==================== DELETE USER ====================
   const deleteUser = async (id) => {
     const user = localUsers.find((u) => u._id === id);
     if (!user) return;
 
-    // prevent delete for protected admin
     if (user.email === PROTECTED_ADMIN_EMAIL) {
       alert("Cannot delete protected admin!");
       return;
     }
 
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    if (!window.confirm(`Are you sure you want to delete ${user.userName}?`))
+      return;
+
+    setUpdatingUserId(id);
 
     try {
       await axiosApi.delete(`/users/${id}`);
-      setLocalUsers(localUsers.filter((u) => u._id !== id));
+      setLocalUsers((prev) => prev.filter((u) => u._id !== id));
       alert("User deleted successfully");
     } catch (err) {
       console.error("Failed to delete user:", err);
       alert("Failed to delete user");
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -71,23 +77,23 @@ const ManageUsers = () => {
         Manage Users
       </h1>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+      <div className="overflow-x-auto shadow-md rounded-lg">
+        <table className="min-w-full bg-white divide-y divide-gray-200">
           <thead className="bg-gray-100">
             <tr>
-              <th className="text-left px-6 py-3 text-gray-600 font-medium">
+              <th className="px-6 py-3 text-left font-medium text-gray-600">
                 Name
               </th>
-              <th className="text-left px-6 py-3 text-gray-600 font-medium">
+              <th className="px-6 py-3 text-left font-medium text-gray-600">
                 Email
               </th>
-              <th className="text-left px-6 py-3 text-gray-600 font-medium">
+              <th className="px-6 py-3 text-left font-medium text-gray-600">
                 Role
               </th>
-              <th className="text-left px-6 py-3 text-gray-600 font-medium">
+              <th className="px-6 py-3 text-left font-medium text-gray-600">
                 Total Lessons
               </th>
-              <th className="text-center px-6 py-3 text-gray-600 font-medium">
+              <th className="px-6 py-3 text-center font-medium text-gray-600">
                 Actions
               </th>
             </tr>
@@ -100,7 +106,7 @@ const ManageUsers = () => {
                   key={user._id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="px-6 py-4">{user.userName}</td>
+                  <td className="px-6 py-4">{user.name}</td>
                   <td className="px-6 py-4">{user.email}</td>
                   <td className="px-6 py-4">
                     <span
@@ -116,33 +122,43 @@ const ManageUsers = () => {
                   <td className="px-6 py-4">{user.lessons || 0}</td>
                   <td className="px-6 py-4 text-center space-x-2">
                     <button
-                      disabled={user.email === PROTECTED_ADMIN_EMAIL}
+                      disabled={
+                        user.email === PROTECTED_ADMIN_EMAIL ||
+                        updatingUserId === user._id
+                      }
                       className={`px-3 py-1 rounded-lg text-white font-medium text-sm transition-colors duration-300 ${
                         user.role === "Admin"
                           ? "bg-indigo-500 hover:bg-indigo-600"
                           : "bg-green-500 hover:bg-green-600"
                       } ${
-                        user.email === PROTECTED_ADMIN_EMAIL
+                        user.email === PROTECTED_ADMIN_EMAIL ||
+                        updatingUserId === user._id
                           ? "opacity-50 cursor-not-allowed"
                           : ""
                       }`}
                       onClick={() => toggleRole(user._id)}
                     >
-                      {user.role === "Admin"
+                      {updatingUserId === user._id
+                        ? "Updating..."
+                        : user.role === "Admin"
                         ? "Demote to User"
                         : "Promote to Admin"}
                     </button>
 
                     <button
-                      disabled={user.email === PROTECTED_ADMIN_EMAIL}
+                      disabled={
+                        user.email === PROTECTED_ADMIN_EMAIL ||
+                        updatingUserId === user._id
+                      }
                       className={`px-3 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600 font-medium text-sm transition-colors duration-300 ${
-                        user.email === PROTECTED_ADMIN_EMAIL
+                        user.email === PROTECTED_ADMIN_EMAIL ||
+                        updatingUserId === user._id
                           ? "opacity-50 cursor-not-allowed"
                           : ""
                       }`}
                       onClick={() => deleteUser(user._id)}
                     >
-                      Delete
+                      {updatingUserId === user._id ? "Deleting..." : "Delete"}
                     </button>
                   </td>
                 </tr>
