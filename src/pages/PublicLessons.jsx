@@ -10,11 +10,13 @@ const PublicLessons = () => {
   const axiosApi = useAxios();
   const { user } = useCurrentUser();
 
-  // ----- Hooks always at the top -----
+  // ----- Hooks at the top -----
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [toneFilter, setToneFilter] = useState("All");
   const [sortOption, setSortOption] = useState("Newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const lessonsPerPage = 8; // Number of lessons per page
 
   const { data: lessons = [], isLoading, isError } = useQuery({
     queryKey: ["lessons"],
@@ -44,6 +46,13 @@ const PublicLessons = () => {
   // Get unique categories & tones
   const categories = useMemo(() => ["All", ...new Set(lessons.map((l) => l.category))], [lessons]);
   const tones = useMemo(() => ["All", ...new Set(lessons.map((l) => l.emotionalTone))], [lessons]);
+
+  // ----- Pagination calculation -----
+  const totalPages = Math.ceil(filteredLessons.length / lessonsPerPage);
+  const paginatedLessons = filteredLessons.slice(
+    (currentPage - 1) * lessonsPerPage,
+    currentPage * lessonsPerPage
+  );
 
   // ----- Early returns -----
   if (isLoading || !user) return <LoadingPage />;
@@ -101,7 +110,7 @@ const PublicLessons = () => {
 
       {/* Lessons Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {filteredLessons.map((lesson) => {
+        {paginatedLessons.map((lesson) => {
           const isLocked = lesson.accessLevel === "Premium" && !user.isPremium;
           return (
             <div
@@ -170,6 +179,23 @@ const PublicLessons = () => {
           );
         })}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-8">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`px-4 py-2 rounded-lg border ${
+                currentPage === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
