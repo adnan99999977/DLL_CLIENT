@@ -5,6 +5,7 @@ const ErrorPage = () => {
   return (
     <div className="relative w-full h-screen bg-gradient-to-b from-[#0a1821] to-[#07141a] text-white overflow-hidden">
       
+      
       <svg
         aria-labelledby="Starry sky"
         className="absolute top-0 left-0 w-full h-full"
