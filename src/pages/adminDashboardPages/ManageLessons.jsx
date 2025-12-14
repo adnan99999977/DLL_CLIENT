@@ -24,6 +24,7 @@ const ManageLessons = () => {
   // Fetch all lessons
   const fetchLessons = async () => {
     try {
+      setLoading(true);
       const res = await axiosApi.get("/lessons");
       setLessons(res.data);
       setLoading(false);
@@ -88,9 +89,7 @@ const ManageLessons = () => {
     try {
       const updatedLesson = { ...lesson, featured: !lesson.featured };
       await axiosApi.patch(`/lessons/${lesson._id}`, { featured: updatedLesson.featured });
-      setLessons(
-        lessons.map((l) => (l._id === lesson._id ? updatedLesson : l))
-      );
+      setLessons(lessons.map((l) => (l._id === lesson._id ? updatedLesson : l)));
     } catch (err) {
       console.error(err);
     }
@@ -101,9 +100,7 @@ const ManageLessons = () => {
     try {
       const updatedLesson = { ...lesson, reviewed: !lesson.reviewed };
       await axiosApi.patch(`/lessons/${lesson._id}`, { reviewed: updatedLesson.reviewed });
-      setLessons(
-        lessons.map((l) => (l._id === lesson._id ? updatedLesson : l))
-      );
+      setLessons(lessons.map((l) => (l._id === lesson._id ? updatedLesson : l)));
     } catch (err) {
       console.error(err);
     }
@@ -125,7 +122,7 @@ const ManageLessons = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 mb-6 justify-center">
+      <div className="flex gap-4 mb-6 justify-center flex-wrap">
         <select
           className="border px-3 py-1 rounded"
           value={categoryFilter}

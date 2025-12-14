@@ -40,7 +40,7 @@ const Navbar = () => {
       { name: "Dashboard", path: "/dashboard" },
     ],
   };
-  const currentRole =  "user" 
+  const currentRole =  dbUser?.role ? 'user' : 'admin'
 
   return (
     <div className=" md:w-[1200px] fixed top-2 md:left-7 border border-gray-300 rounded-full bg-transparent backdrop-blur-md z-100 mx-auto  shadow-2xl">

@@ -46,7 +46,7 @@ const AdminProfile = () => {
     setUserData({
       name: user.userName || "Admin",
       email: user.email,
-      photoURL: user.userImage || "/default-avatar.png",
+      photoURL: user.photoURL || "/default-avatar.png",
       role: "Admin",
       stats: {
         totalUsers: dbUser?.length || 0,
@@ -56,7 +56,7 @@ const AdminProfile = () => {
     });
 
     setNewName(user.userName || "Admin");
-    setNewPhoto(user.userImage || "/default-avatar.png");
+    setNewPhoto(user.photoURL || "/default-avatar.png");
   }, [user, dbUser, lessons, reports]);
 
   if (loading) return <LoadingPage />;
@@ -211,7 +211,7 @@ const AdminProfile = () => {
       {/* Recent Lessons */}
       <div className="max-w-5xl mx-auto mt-12">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
-          Recent Lessons
+         All Lessons
         </h2>
         <motion.div
           initial={{ opacity: 0 }}

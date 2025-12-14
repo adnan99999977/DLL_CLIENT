@@ -62,7 +62,7 @@ const useCurrentUser = () => {
 
     fetchData();
   }, [currentUser]);
-
+  console.log(currentUser)
   return { user, lessons, loading, error };
 };
 

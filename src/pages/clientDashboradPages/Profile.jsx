@@ -18,7 +18,6 @@ import useAxios from "../../api/useAxios";
 const Profile = () => {
   const axiosApi = useAxios();
   const { user, loading, error, lessons } = useCurrentUser();
-  console.log(user);
   const [userData, setUserData] = useState(null);
   const [editName, setEditName] = useState(false);
   const [newName, setNewName] = useState("");

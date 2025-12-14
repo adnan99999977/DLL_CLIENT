@@ -1,49 +1,17 @@
-import React from "react";
-
-// Static Featured Lessons Data
-const lessons = [
-  {
-    title: "Boosting Creativity Through Daily Practices",
-    description:
-      "Creativity isn’t a talent reserved for a few—it’s a skill you can train. This lesson explores techniques like idea journaling, divergent thinking, curiosity exercises, and reducing mental clutter. With the right mindset and habits, you can unlock your inner creativity and generate better ideas in your work and life.",
-    category: "Creativity",
-    emotionalTone: "Encouraging",
-    userImage:
-      "https://images.unsplash.com/photo-1740560052722-12abf8819817?q=80&w=1170&auto=format&fit=crop",
-    accessLevel: "Free",
-    creatorName: "Sophia Rivera",
-    creatorPhotoURL:
-      "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800",
-  },
-  {
-    title: "Breaking Negative Thought Patterns",
-    description:
-      "Your thoughts shape your actions and identity. This lesson teaches cognitive reframing, pattern interruption, and grounding techniques to help break harmful thinking loops. By understanding how negative thoughts form and learning practical ways to shift them, you can build a healthier mindset and regain emotional control.",
-    category: "Mental Wellness",
-    emotionalTone: "Healing",
-    userImage:
-      "https://images.unsplash.com/photo-1579756423483-7ad1f01ece5c?q=80&w=1170&auto=format&fit=crop",
-    accessLevel: "Free",
-    creatorName: "Liam Carter",
-    creatorPhotoURL:
-      "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800",
-  },
-  {
-    title: "Developing Strong Communication Skills",
-    description:
-      "Effective communication opens doors. This lesson covers clarity of speech, active listening, confidence building, and audience awareness. Discover practical exercises that help you express ideas better, reduce misunderstandings, and improve personal as well as professional relationships.",
-    category: "Skills Development",
-    emotionalTone: "Practical",
-    userImage:
-      "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1170&auto=format&fit=crop",
-    accessLevel: "Premium",
-    creatorName: "Emma Blake",
-    creatorPhotoURL:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800",
-  },
-];
+import React, { useEffect, useState } from "react";
+import useAxios from "../api/useAxios";
 
 const FeaturedLessons = () => {
+  const [lessons, setLessons] = useState([]);
+  const axiosApi = useAxios();
+
+  useEffect(() => {
+    axiosApi
+      .get("/featured-lessons")
+      .then((res) => setLessons(res.data))
+      .catch((err) => console.error(err));
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto py-12 px-4">
       <h2 className="text-3xl font-bold mb-8 text-gray-800 text-center">
