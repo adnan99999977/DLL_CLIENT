@@ -63,12 +63,12 @@ const DashboardHome = () => {
   });
 
   favorites?.forEach((fav) => {
-  const created = new Date(fav.createdAt);
-  const dayDiff = Math.floor((now - created) / (1000 * 60 * 60 * 24));
-  const weekDiff = Math.floor(dayDiff / 7);
-  if (dayDiff < 7) stats.weeklyDataFavorites[6 - dayDiff] += 1;
-  if (weekDiff < 4) stats.monthlyDataFavorites[3 - weekDiff] += 1;
-});
+    const created = new Date(fav.createdAt);
+    const dayDiff = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+    const weekDiff = Math.floor(dayDiff / 7);
+    if (dayDiff < 7) stats.weeklyDataFavorites[6 - dayDiff] += 1;
+    if (weekDiff < 4) stats.monthlyDataFavorites[3 - weekDiff] += 1;
+  });
 
   // ===== CHART DATA =====
   const chartData =
@@ -221,11 +221,6 @@ const DashboardHome = () => {
               value={lessons?.length}
               color="bg-indigo-500"
             />
-
-
-            
-
-            
           </div>
           <div className="flex gap-2">
             <button
