@@ -6,6 +6,7 @@ import LoadingPage from "../../components/shared/LoadingPage";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import useAxios from "../../api/useAxios";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MyFavorites = () => {
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -19,8 +20,9 @@ const MyFavorites = () => {
     );
   });
    
-  const handleDeleteFav = async (id) => {
+  const queryClient = useQueryClient();
 
+const handleDeleteFav = async (id) => {
   const result = await Swal.fire({
     title: "Are you sure?",
     text: "You won't be able to revert this!",
@@ -34,19 +36,13 @@ const MyFavorites = () => {
   if (result.isConfirmed) {
     try {
       await axiosApi.delete(`/favorites/${id}`);
-      Swal.fire({
-        title: "Deleted!",
-        text: "Your favorite lesson has been deleted.",
-        icon: "success"
-      });
-      window.location.reload(); 
+      Swal.fire("Deleted!", "Your favorite lesson has been deleted.", "success");
+
+      // ✅ Refresh favorites list
+      queryClient.invalidateQueries(["currentUserFavorites"]);
     } catch (err) {
       console.error(err);
-      Swal.fire({
-        title: "Error!",
-        text: "Failed to delete favorite.",
-        icon: "error"
-      });
+      Swal.fire("Error!", "Failed to delete favorite.", "error");
     }
   }
 };
@@ -109,7 +105,6 @@ const MyFavorites = () => {
               <th className="px-6 py-3 text-left">Title</th>
               <th className="px-6 py-3 text-left">Category</th>
               <th className="px-6 py-3 text-left">Tone</th>
-              <th className="px-6 py-3 text-left">Added</th>
               <th className="px-6 py-3 text-center">Actions</th>
             </tr>
           </thead>
@@ -127,9 +122,6 @@ const MyFavorites = () => {
                   <td className="px-6 py-4">{fav.lessonTitle}</td>
                   <td className="px-6 py-4">{fav.lessonCategory}</td>
                   <td className="px-6 py-4">{fav.lessonTone}</td>
-                  <td className="px-6 py-4">
-                    {new Date(fav.createdAt).toLocaleDateString()}
-                  </td>
                   <td className="px-6 py-4 flex justify-center gap-4">
                     <button
                       onClick={() => handleDeleteFav(fav._id)}

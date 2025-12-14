@@ -31,79 +31,91 @@ const Register = () => {
   };
 
   const handleGoogle = async () => {
+  try {
+    const result = await signInViaGoogle();
+    const user = result.user;
 
-    try {
-      const result = await signInViaGoogle();
-      const user = result.user;
+    // DB-ready user object
+    const googleUserData = {
+      uid: user.uid,                     // Firebase UID
+      name: user.displayName || "No Name",
+      email: user.email,
+      photoURL: user.photoURL,
+      role: "user",                      // lowercase
+      plan: "free",                      // lowercase
+      isPremium: false,
+      totalLessons: 0,
+      totalFavorites: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-      const googleUserData = {
-        userName: user.displayName || "No Name",
-        email: user.email,
-        userImage: user.photoURL,
-        role: "user",
-        plan: "Free",
-        isPremium: false,
-        provider: "google",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+    // Check if user already exists in DB
+    const res = await axiosApi.post("/users/google", googleUserData);
 
-      const res = await axiosApi.post("/users/google", googleUserData);
+    console.log("✅ Google user DB response:", res.data);
+    alert("Google login successful!");
 
-      console.log("✅ Google user DB response:", res.data);
-      alert("Google login successful!");
-    } catch (error) {
-      console.error("❌ Google login failed:", error.response?.data || error);
-    }
-  };
+    // Optionally set user to context/localStorage
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+
+  } catch (error) {
+    console.error("❌ Google login failed:", error.response?.data || error);
+  }
+};
 
   const handleRegister = async (data) => {
-    if (!imageURL) {
-      alert(
-        isUploading
-          ? "Image is still uploading. Please wait."
-          : "Please upload a profile image first!"
-      );
-      return;
-    }
+  if (!imageURL) {
+    alert(
+      isUploading
+        ? "Image is still uploading. Please wait."
+        : "Please upload a profile image first!"
+    );
+    return;
+  }
 
-    try {
-      const { confirmPassword, ...userData } = data;
-      const registrationData = {
-        ...userData,
-        userImage: imageURL,
-        role: "user",
-        plan: "Free",
-        isPremium: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+  try {
+    const { confirmPassword, ...userData } = data;
 
-      console.log(data, registrationData);
+    // 1️⃣ Create user in Firebase Auth
+    const userCredential = await registerUser(userData.email, userData.password);
+    const currentUser = userCredential.user;
 
-      const userCredential = await registerUser(
-        userData.email,
-        userData.password
-      );
-      const currentUser = userCredential.user;
+    // 2️⃣ Update Firebase Profile
+    await updateUser(currentUser, {
+      displayName: userData.userName,
+      photoURL: imageURL,
+    });
 
-      await updateUser(currentUser, {
-        displayName: userData.userName,
-        photoURL: imageURL,
-      });
-      setUser({
-        ...currentUser,
-        displayName: userData.userName,
-        photoURL: imageURL,
-      });
+    // 3️⃣ DB-ready user object
+    const registrationData = {
+      uid: currentUser.uid,
+      name: userData.userName,
+      email: userData.email,
+      photoURL: imageURL,
+      role: "user",
+      plan: "free",
+      isPremium: false,
+      totalLessons: 0,
+      totalFavorites: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-      await axiosApi.post("/users", registrationData);
+    // 4️⃣ Save to DB
+    const res = await axiosApi.post("/users", registrationData);
 
-      alert("Registration successful!");
-    } catch (err) {
-      console.error("Registration failed", err);
-    }
-  };
+    console.log("✅ Registration DB response:", res.data);
+    alert("Registration successful!");
+
+    // Optionally set user in context/localStorage
+    setUser({ ...currentUser, name: userData.userName, photoURL: imageURL });
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+
+  } catch (err) {
+    console.error("❌ Registration failed:", err.response?.data || err.message);
+  }
+};
 
   const password = watch("password");
 

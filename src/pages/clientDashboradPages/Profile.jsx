@@ -10,94 +10,72 @@ import {
   Calendar,
   Mail,
   Edit2,
-  Camera,
 } from "lucide-react";
 import useCurrentUser from "../../hooks/useCurrentUser";
 import LoadingPage from "../../components/shared/LoadingPage";
 import useAxios from "../../api/useAxios";
 
-const defaultUserData = {
-  name: "User",
-  email: "User@gmail.com",
-  photoURL: "/default-avatar.png",
-  role: "User",
-  isPremium: false,
-  joinedDate: new Date(),
-  stats: {
-    totalLessons: 0,
-    totalLikes: 0,
-    totalFavorites: 0,
-    totalViews: 0,
-  },
-  lessons: [],
-};
-
 const Profile = () => {
   const axiosApi = useAxios();
   const { user, loading, error, lessons } = useCurrentUser();
-  const [userData, setUserData] = useState(defaultUserData);
+  console.log(user);
+  const [userData, setUserData] = useState(null);
   const [editName, setEditName] = useState(false);
-  const [editPhoto, setEditPhoto] = useState(false);
-  const [newName, setNewName] = useState(userData.name);
-  const [newPhoto, setNewPhoto] = useState(userData.photoURL);
+  const [newName, setNewName] = useState("");
+  const [newPhoto, setNewPhoto] = useState("");
 
   const fileInputRef = useRef(null);
   const triggerFileSelect = () => {
     fileInputRef.current.click();
   };
 
+  // Update userData when user or lessons change
   useEffect(() => {
     if (!user) return;
 
     setUserData({
-      name: user.userName || "Unnamed User",
+      name: user.name,
       email: user.email,
-      photoURL: user.userImage || defaultUserData.photoURL,
-      role: user.role || "User",
+      photoURL: user.photoURL,
+      role: user.role || "user",
       isPremium: user.isPremium || false,
       joinedDate: user.createdAt ? new Date(user.createdAt) : new Date(),
-
       totalLessons: lessons?.length || 0,
-      totalLikes: lessons[0]?.likesCount || 0,
-      totalFavorites: lessons[0]?.favoritesCount || 0,
-      totalViews: Math.floor(Math.random() * 1000),
-
+      totalLikes: lessons?.reduce((a, l) => a + (l.likesCount || 0), 0) || 0,
+      totalFavorites:
+        lessons?.reduce((a, l) => a + (l.favoritesCount || 0), 0) || 0,
+      totalViews: lessons?.reduce((a, l) => a + (l.viewsCount || 0), 0) || 0,
       lessons: lessons || [],
     });
 
-    setNewName(user.userName || "Unnamed User");
-    setNewPhoto(user.userImage || defaultUserData.photoURL);
+    setNewName(user.name || "");
+    setNewPhoto(user.photoURL || "");
   }, [user, lessons]);
 
-
-  if (loading)
-    return (
-      <div>
-        <LoadingPage />
-      </div>
-    );
+  // Loading & error handling
+  if (loading) return <LoadingPage />;
   if (error)
     return (
       <div className="text-center p-10 text-xl font-semibold text-red-600">
         Error: Failed to fetch user data.
       </div>
     );
-  if (!user)
+  if (!userData)
     return (
       <div className="text-center p-10 text-xl font-semibold text-gray-600">
         Please log in to view your profile.
       </div>
     );
 
-  const sortedLessons = [...lessons].sort(
+  const sortedLessons = [...userData.lessons].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
 
+  // Update name
   const handleNameUpdate = async () => {
     try {
       setUserData({ ...userData, name: newName });
       setEditName(false);
-
       await axiosApi.patch(`/users/${user._id}`, { userName: newName });
       alert("Name updated successfully!");
     } catch (err) {
@@ -106,6 +84,7 @@ const Profile = () => {
     }
   };
 
+  // Update photo
   const handlePhotoUpdate = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -113,10 +92,8 @@ const Profile = () => {
     const reader = new FileReader();
     reader.onload = async () => {
       const base64Image = reader.result;
-
       setNewPhoto(base64Image);
       setUserData({ ...userData, photoURL: base64Image });
-      setEditPhoto(false);
 
       try {
         await axiosApi.patch(`/users/${user._id}`, { userImage: base64Image });
@@ -129,28 +106,28 @@ const Profile = () => {
     reader.readAsDataURL(file);
   };
 
-  const formatDate = (date) => {
-    return date.toLocaleDateString("en-US", {
+  const formatDate = (date) =>
+    date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      {/* PROFILE CARD */}
       <motion.div
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6 flex flex-col md:flex-row gap-6"
       >
-        {/* Avatar  */}
+        {/* Avatar */}
         <div className="relative group w-36 h-36 mx-auto">
           <img
-            src={newPhoto}
+            src={newPhoto || userData?.photoURL || "/default-avatar.png"}
             alt="Profile"
-            className="w-full h-full rounded-full border-4 border-indigo-500 shadow-md object-cover"
+            className="w-full h-full rounded-full object-cover"
           />
 
           <div
@@ -159,7 +136,6 @@ const Profile = () => {
           >
             <Edit2 className="text-white drop-shadow-md" size={24} />
           </div>
-
           <input
             type="file"
             ref={fileInputRef}
@@ -168,6 +144,7 @@ const Profile = () => {
             onChange={handlePhotoUpdate}
           />
         </div>
+
         {/* User Info */}
         <div className="flex-1 text-center md:text-left">
           <div className="flex items-center justify-center md:justify-start gap-2">
@@ -202,21 +179,7 @@ const Profile = () => {
                 <Crown size={14} /> Premium
               </span>
             ) : (
-              <span className="flex items-center gap-1 bg-green-100 text-gre-700 px-2 py-1 text-xs rounded-full">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="size-4"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
-                  />
-                </svg>
+              <span className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 text-xs rounded-full">
                 Free
               </span>
             )}
@@ -237,7 +200,7 @@ const Profile = () => {
         </div>
       </motion.div>
 
-      {/* STATS  */}
+      {/* STATS */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -258,6 +221,7 @@ const Profile = () => {
         <StatCard icon={<Eye />} label="Views" value={userData.totalViews} />
       </motion.div>
 
+      {/* Lessons */}
       <div className="max-w-6xl mx-auto mt-12">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-800">
@@ -279,15 +243,13 @@ const Profile = () => {
                 className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer group"
               >
                 <div className="relative">
-                  {/* Lesson Image */}
                   <img
-                    src={lesson.userImage}
+                    src={lesson.userImage || "/default-avatar.png"}
                     alt={lesson.title}
                     className="w-full h-44 object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition" />
                 </div>
-
                 <div className="p-4">
                   <h3 className="font-semibold text-lg text-gray-800 mb-1">
                     {lesson.title}
@@ -295,10 +257,12 @@ const Profile = () => {
                   <p className="text-sm text-gray-500">
                     {lesson.category} • {lesson.emotionalTone}
                   </p>
-
                   <div className="flex items-center gap-3 mt-2 text-gray-400 text-sm">
                     <span className="flex items-center gap-1">
-                      <Heart size={14} /> {lesson.likes || 0}
+                      <Heart size={14} /> {lesson.likesCount || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Eye size={14} /> {lesson.viewsCount || 0}
                     </span>
                   </div>
                 </div>
@@ -306,12 +270,11 @@ const Profile = () => {
             ))
           ) : (
             <p className="col-span-3 text-center py-10 text-gray-500">
-              You don't add any lesson yet !
+              You haven't added any lessons yet!
             </p>
           )}
         </motion.div>
       </div>
-      {/* ------------------------------------------- */}
     </div>
   );
 };

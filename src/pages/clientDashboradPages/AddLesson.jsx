@@ -15,20 +15,43 @@ const fadeUp = {
 const AddLesson = () => {
   const { user } = useContext(AuthContext);
   const { uid, displayName, email, photoURL } = user;
-  const [imageURL, setImageURL] = useState();
+
+  const [imageURL, setImageURL] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [fileName, setFileName] = useState("Choose an image");
   const [newUser, setNewUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
-  const axiosApi = useAxios();
 
+  const axiosApi = useAxios();
+  const queryClient = useQueryClient();
+
+  // react-hook-form
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm();
-  const queryClient = useQueryClient();
 
+  // fetch user info from backend
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoadingUser(true);
+        const res = await axiosApi.get(`/users?email=${email}`);
+        setNewUser(res.data);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+    fetchUser();
+  }, [email, axiosApi]);
+
+  const isPremium = !!newUser?.isPremium;
+
+  // mutation to add lesson
   const addLessonMutation = useMutation({
     mutationFn: async (lessonData) => {
       const res = await axiosApi.post("/lessons", lessonData);
@@ -37,17 +60,23 @@ const AddLesson = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(["lessons"]);
       queryClient.invalidateQueries(["myLessons"]);
-      alert("Lesson added successfully ✅");
+      alert("✅ Lesson added successfully");
+      reset();
+      setImageURL(null);
+      setFileName("Choose an image");
     },
     onError: (error) => {
-      alert(error.message || "Failed to add lesson ❌");
+      alert(error.response?.data?.message || "❌ Failed to add lesson");
     },
   });
 
+  // handle file upload
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
+    if (!file) return;
     setFileName(file.name);
     setIsUploading(true);
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", "DLLimages");
@@ -60,16 +89,28 @@ const AddLesson = () => {
       const data = await res.json();
       setImageURL(data.secure_url);
     } catch (err) {
-      console.error("Upload failed", err);
+      console.error("Upload failed:", err);
+      alert("Image upload failed. Try again.");
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleAdd = async (data) => {
+  // handle form submission
+  const handleAddLesson = (data) => {
+    if (!imageURL) {
+      alert("Please upload a featured image for your lesson.");
+      return;
+    }
+
     const lessonData = {
-      ...data,
-      userImage: imageURL || "",
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      emotionalTone: data.emotionalTone,
+      visibility: data.visibility,
+      accessLevel: isPremium ? data.accessLevel : "Free",
+      userImage: imageURL,
       creatorId: uid,
       creatorName: displayName,
       creatorEmail: email,
@@ -87,31 +128,7 @@ const AddLesson = () => {
     addLessonMutation.mutate(lessonData);
   };
 
-  // Fetch user data from backend
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        setLoadingUser(true);
-        const res = await axiosApi.get(`/users?email=${email}`);
-        setNewUser(res.data);
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-      } finally {
-        setLoadingUser(false);
-      }
-    };
-    fetchUser();
-  }, [email]);
-
-  if (loadingUser) {
-    return (
-      <div>
-        <LoadingPage />
-      </div>
-    );
-  }
-
-  const isPremium = !!newUser?.isPremium;
+  if (loadingUser) return <LoadingPage />;
 
   return (
     <motion.div
@@ -122,16 +139,12 @@ const AddLesson = () => {
     >
       <div className="w-full max-w-5xl">
         {/* Header */}
-        <motion.div
-          variants={fadeUp}
-          className="mb-8 sm:mb-12 text-center px-2"
-        >
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-indigo-700 mb-2 animate__animated animate__fadeInDown">
+        <motion.div variants={fadeUp} className="mb-8 sm:mb-12 text-center px-2">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-indigo-700 mb-2">
             Create a Life Lesson
           </h1>
           <p className="text-gray-600 text-base sm:text-lg max-w-xl mx-auto">
-            Share your insights and experiences with the world in a meaningful
-            way.
+            Share your insights and experiences with the world in a meaningful way.
           </p>
         </motion.div>
 
@@ -140,10 +153,7 @@ const AddLesson = () => {
           variants={fadeUp}
           className="backdrop-blur-xl bg-white/60 border border-white/30 shadow-2xl rounded-3xl p-6 sm:p-10 md:p-12 hover:shadow-3xl transition-shadow duration-300"
         >
-          <form
-            onSubmit={handleSubmit(handleAdd)}
-            className="space-y-6 sm:space-y-8"
-          >
+          <form onSubmit={handleSubmit(handleAddLesson)} className="space-y-6 sm:space-y-8">
             {/* Title */}
             <div>
               <label className="block font-semibold mb-1 sm:mb-2 text-gray-700 text-base sm:text-lg">
@@ -155,11 +165,7 @@ const AddLesson = () => {
                 placeholder="The hard truth I learned too late..."
                 className="w-full rounded-2xl border border-gray-200 p-3 sm:p-4 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm hover:shadow-md transition text-sm sm:text-base"
               />
-              {errors.title && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1">
-                  {errors.title.message}
-                </p>
-              )}
+              {errors.title && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.title.message}</p>}
             </div>
 
             {/* Description */}
@@ -168,17 +174,11 @@ const AddLesson = () => {
                 Your Story <span className="text-red-600">*</span>
               </label>
               <textarea
-                {...register("description", {
-                  required: "Description is required",
-                })}
+                {...register("description", { required: "Description is required" })}
                 placeholder="Write honestly. This is where the magic happens..."
                 className="w-full rounded-2xl border border-gray-200 p-3 sm:p-4 min-h-[140px] sm:min-h-[180px] focus:ring-2 focus:ring-indigo-500 outline-none resize-none shadow-sm hover:shadow-md transition text-sm sm:text-base"
               />
-              {errors.description && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1">
-                  {errors.description.message}
-                </p>
-              )}
+              {errors.description && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.description.message}</p>}
             </div>
 
             {/* Category & Tone */}
@@ -208,6 +208,7 @@ const AddLesson = () => {
                   {...register("emotionalTone", { required: "Tone required" })}
                   className="w-full rounded-2xl border p-3 sm:p-4 shadow-sm hover:shadow-md transition text-sm sm:text-base"
                 >
+                  <option value="">Select tone</option>
                   <option>Motivational</option>
                   <option>Sad</option>
                   <option>Realization</option>
@@ -234,9 +235,7 @@ const AddLesson = () => {
                 onClick={() => document.getElementById("lessonImage").click()}
               >
                 <span className="text-gray-700 truncate">{fileName}</span>
-                {isUploading && (
-                  <span className="text-gray-500">Uploading...</span>
-                )}
+                {isUploading && <span className="text-gray-500">Uploading...</span>}
               </div>
             </div>
 
@@ -247,9 +246,7 @@ const AddLesson = () => {
                   Visibility <span className="text-red-600">*</span>
                 </label>
                 <select
-                  {...register("visibility", {
-                    required: "Visibility required",
-                  })}
+                  {...register("visibility", { required: "Visibility required" })}
                   className="w-full rounded-2xl border p-3 sm:p-4 shadow-sm hover:shadow-md transition text-sm sm:text-base"
                 >
                   <option value="">Select visibility</option>
@@ -268,9 +265,7 @@ const AddLesson = () => {
                   {...register("accessLevel")}
                   disabled={!isPremium}
                   className={`w-full rounded-2xl border p-3 sm:p-4 shadow-sm hover:shadow-md transition text-sm sm:text-base ${
-                    !isPremium
-                      ? "bg-gray-100 cursor-not-allowed text-gray-400"
-                      : ""
+                    !isPremium ? "bg-gray-100 cursor-not-allowed text-gray-400" : ""
                   }`}
                 >
                   <option>Free</option>
@@ -292,9 +287,7 @@ const AddLesson = () => {
               whileTap={{ scale: 0.97 }}
               className="w-full mt-6 sm:mt-10 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 sm:py-4 rounded-3xl font-bold text-base sm:text-lg shadow-lg hover:shadow-2xl transition"
             >
-              {addLessonMutation.isLoading
-                ? "Publishing..."
-                : "Publish Lesson 🚀"}
+              {addLessonMutation.isLoading ? "Publishing..." : "Publish Lesson 🚀"}
             </motion.button>
           </form>
         </motion.div>

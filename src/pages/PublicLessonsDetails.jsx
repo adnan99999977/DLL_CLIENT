@@ -6,23 +6,31 @@ import useCurrentUser from "../hooks/useCurrentUser";
 import LoadingPage from "../components/shared/LoadingPage";
 import Swal from "sweetalert2";
 import useAxios from "../api/useAxios";
+import toast from "react-hot-toast";
 
-/* ================= API ================= */
-const getLessonDetails = async (id) => {
+/* ================= API FUNCTIONS ================= */
+const getLessonDetails = async (axiosApi, id) => {
   const res = await axiosApi.get(`/lessons/${id}`);
+  if (!res.data) throw new Error("Lesson not found");
   return res.data;
 };
 
-const getRelatedLessons = async (category, emotionalTone, currentId) => {
+const getRelatedLessons = async (
+  axiosApi,
+  category,
+  emotionalTone,
+  currentId
+) => {
   const res = await axiosApi.get(
     `/lessons?category=${category}&emotionalTone=${emotionalTone}`
   );
-  return res.data.filter((l) => l._id !== currentId).slice(0, 6); // max 6
+  // Exclude current lesson & limit to 6
+  return res.data.filter((l) => l._id !== currentId).slice(0, 6);
 };
 
 const PublicLessonsDetails = () => {
   const { id } = useParams();
-  const { user, lessons } = useCurrentUser();
+  const { user } = useCurrentUser();
   const queryClient = useQueryClient();
   const [comment, setComment] = useState("");
   const [relatedLessons, setRelatedLessons] = useState([]);
@@ -30,6 +38,7 @@ const PublicLessonsDetails = () => {
   const [isFavorited, setIsFavorited] = useState(false);
   const axiosApi = useAxios();
 
+  /* ================= HELPER ================= */
   const formatDateTime = (date) =>
     new Intl.DateTimeFormat("en-US", {
       year: "numeric",
@@ -44,38 +53,50 @@ const PublicLessonsDetails = () => {
     isError: lessonError,
   } = useQuery({
     queryKey: ["lesson", id],
-    queryFn: () => getLessonDetails(id),
+    queryFn: () => getLessonDetails(axiosApi, id),
     enabled: !!id,
   });
 
-  useEffect(() => {
-    if (lesson) {
-      axiosApi.patch(`/lessons/${lesson._id}/view`);
-    }
-  }, [lesson]);
+  /* Increment view count on mount */
+
   /* ================= FETCH COMMENTS ================= */
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ["comments", id],
-    queryFn: async () => {
-      const res = await axiosApi.get(`/comments?lessonId=${id}`);
-      return res.data;
-    },
+    queryFn: async () =>
+      axiosApi.get(`/comments?lessonId=${id}`).then((res) => res.data),
     enabled: !!id,
+    refetchInterval: 3000,
   });
 
   /* ================= MUTATIONS ================= */
-
   const addCommentMutation = useMutation({
     mutationFn: (data) => axiosApi.post("/comments", data),
-    onSuccess: () => {
-      setComment("");
+    onMutate: async (newComment) => {
+      await queryClient.cancelQueries(["comments", id]);
+
+      const previousComments = queryClient.getQueryData(["comments", id]);
+
+      queryClient.setQueryData(["comments", id], (old = []) => [
+        ...old,
+        { ...newComment, _id: Math.random().toString(36).substring(2) },
+      ]);
+
+      return { previousComments };
+    },
+    onError: (err, newComment, context) => {
+      queryClient.setQueryData(["comments", id], context.previousComments);
+      toast.error("Failed to add comment");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries(["comments", id]);
     },
   });
 
-  const queryRelatedLessons = async () => {
+  /* ================= RELATED LESSONS ================= */
+  const fetchRelatedLessons = async () => {
     if (!lesson) return;
     const data = await getRelatedLessons(
+      axiosApi,
       lesson.category,
       lesson.emotionalTone,
       lesson._id
@@ -88,7 +109,7 @@ const PublicLessonsDetails = () => {
     if (lesson && user) {
       setIsLiked(lesson.likes?.includes(user._id));
       setIsFavorited(lesson.favorites?.includes(user._id));
-      queryRelatedLessons();
+      fetchRelatedLessons();
     }
   }, [lesson, user]);
 
@@ -104,40 +125,36 @@ const PublicLessonsDetails = () => {
   /* ================= LOCK CHECK ================= */
   const isLocked = lesson.accessLevel === "Premium" && !user.isPremium;
 
-  /* ================= STATIC ENGAGEMENT ================= */
-  const favoritesCount = lesson.favoritesCount || 0;
+  /* ================= ENGAGEMENT ================= */
   const viewsCount = lesson.viewsCount || Math.floor(Math.random() * 100);
-  const readingTime =
-    lesson.readingTime || Math.ceil(lesson.description.split(" ").length / 200);
 
   /* ================= HANDLERS ================= */
   const handleFavorite = async () => {
-    if (!user) return;
+    if (!user || isFavorited) return;
 
     try {
-      // Add favorite in favorites collection
-      await axiosApi.post("/favorites", {
+      const res = await axiosApi.post("/favorites", {
         userId: user._id,
         lessonId: lesson._id,
       });
 
-      // Increment favorite count in lessons collection
+      // If added successfully
       await axiosApi.patch(`/lessons/${lesson._id}/favorite`);
-
-      // Optimistically update local state
       setIsFavorited(true);
-
-      // Refresh lesson data
       queryClient.invalidateQueries(["lesson", id]);
+      toast.success("Added to favorites!");
     } catch (err) {
       console.error(err);
-      alert("Failed to add favorite");
+      if (err.response?.data?.message === "Already favorited") {
+        toast.error("You already added this lesson to favorites!");
+      } else {
+        toast.error("Failed to add favorite!");
+      }
     }
   };
 
   const handleLike = async () => {
     if (!user) return;
-
     try {
       await axiosApi.patch(`/lessons/${lesson._id}/like`);
       setIsLiked(true);
@@ -172,17 +189,16 @@ const PublicLessonsDetails = () => {
           reporterUserId: user._id,
           reporterEmail: user.email,
           reporterUserName: user.userName,
-          reason: [],
+          reason: [reason],
           timestamp: new Date().toISOString(),
         });
-
         Swal.fire(
           "Reported!",
           "Thank you for reporting. We will review it soon.",
           "success"
         );
       } catch (err) {
-        console.error("Failed to report lesson:", err);
+        console.error(err);
         Swal.fire("Error", "Failed to report this lesson.", "error");
       }
     }
@@ -266,7 +282,12 @@ const PublicLessonsDetails = () => {
               <span>🗓 Created: {formatDateTime(lesson.createdAt)}</span>
               <span>🗓 Updated: {formatDateTime(lesson.updatedAt)}</span>
               <span>Visibility: {lesson.visibility}</span>
-              <span>⏱ {readingTime} min read</span>
+              <span>
+                ⏱{" "}
+                {lesson.readingTime ||
+                  Math.ceil(lesson.description.split(" ").length / 200)}{" "}
+                min read
+              </span>
             </div>
 
             {/* Creator */}
@@ -289,15 +310,18 @@ const PublicLessonsDetails = () => {
             <div className="flex flex-wrap items-center gap-5 pt-4 text-slate-500">
               <button onClick={handleLike} className="flex items-center gap-1">
                 <Heart className="size-6" />
-                <span>{lesson.likesCount}</span>
+                <span>{lesson.likesCount || 0}</span>
               </button>
 
               <button
                 onClick={handleFavorite}
-                className="flex items-center gap-1"
+                className={`flex items-center gap-1 ${
+                  isFavorited ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                disabled={isFavorited}
               >
                 <Bookmark className="size-6" />
-                <span>{lesson.favoritesCount}</span>
+                <span>{lesson.favoritesCount || 0}</span>
               </button>
 
               <div className="group flex items-center gap-1 cursor-pointer">
@@ -330,7 +354,7 @@ const PublicLessonsDetails = () => {
                   <div key={c._id} className="bg-gray-100 p-2 rounded">
                     <div className="flex items-center gap-2 mb-1">
                       <img
-                        src={c.userImage}
+                        src={user.photoURL || './default-avatar.png'}
                         className="w-8 h-8 rounded-full"
                         alt=""
                       />
@@ -368,6 +392,7 @@ const PublicLessonsDetails = () => {
                 {relatedLessons.map((l) => (
                   <Link
                     key={l._id}
+                    to={`/public-lessons-details/${l._id}`}
                     className="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition"
                   >
                     <img

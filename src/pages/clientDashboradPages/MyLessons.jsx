@@ -15,6 +15,7 @@ const MyLessons = () => {
     try {
       const res = await axiosApi.patch(`/lessons/${id}/toggle-visibility`);
       if (res.data.modifiedCount > 0) {
+        // Hard reload the page to reflect changes
         window.location.reload();
       }
     } catch (error) {
@@ -30,6 +31,7 @@ const MyLessons = () => {
     try {
       const res = await axiosApi.patch(`/lessons/${id}/toggle-access`);
       if (res.data.modifiedCount > 0) {
+        // Hard reload the page to reflect changes
         window.location.reload();
       }
     } catch (error) {

@@ -2,40 +2,27 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../auth/AuthContext";
 import useAxios from "../api/useAxios";
+import useCurrentUser from "./useCurrentUser";
 
 const useCurrentUserFav = () => {
-  const { currentUser } = useContext(AuthContext);
-
+  const { user } = useCurrentUser();
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const axiosApi = useAxios();
 
   useEffect(() => {
-    if (!currentUser?.email) {
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
 
-    const fetchFavorites = async () => {
+    setLoading(true);
+    axiosApi
+      .get(`/favorites?userId=${user._id}`)
+      .then((res) => setFavorites(res.data))
+      .catch((err) => setError(err))
+      .finally(() => setLoading(false));
+  }, [user]);
 
-      try {
-        const res = await axiosApi.get("/favorites", {
-          params: { email: currentUser.email },
-        });
-        setFavorites(res.data || []);
-      } catch (err) {
-        console.error("Failed to fetch favorites:", err);
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFavorites();
-  }, [currentUser]);
-
-  return { favorites, loading, error };
+  return { favorites, loading, error, setFavorites };
 };
 
 export default useCurrentUserFav;

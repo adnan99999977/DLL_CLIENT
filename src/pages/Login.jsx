@@ -21,31 +21,39 @@ const Login = () => {
   } = useForm();
 
   // google log in
-  const handleGoogle = async () => {
-    try {
-      const result = await signInViaGoogle();
-      const user = result.user;
+   const handleGoogle = async () => {
+  try {
+    const result = await signInViaGoogle();
+    const user = result.user;
 
-      const googleUserData = {
-        userName: user.displayName || "No Name",
-        email: user.email,
-        userImage: user.photoURL,
-        role: "user",
-        plan: "Free",
-        isPremium: false,
-        provider: "google",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+    // DB-ready user object
+    const googleUserData = {
+      uid: user.uid,                     // Firebase UID
+      name: user.displayName || "No Name",
+      email: user.email,
+      photoURL: user.photoURL,
+      role: "user",                      // lowercase
+      plan: "free",                      // lowercase
+      isPremium: false,
+      totalLessons: 0,
+      totalFavorites: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-      const res = await axiosApi.post("/users/google", googleUserData);
+    // Check if user already exists in DB
+    const res = await axiosApi.post("/users/google", googleUserData);
 
-      console.log("✅ Google user DB response:", res.data);
-      alert("Google login successful!");
-    } catch (error) {
-      console.error("❌ Google login failed:", error.response?.data || error);
-    }
-  };
+    console.log("✅ Google user DB response:", res.data);
+    alert("Google login successful!");
+
+    // Optionally set user to context/localStorage
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+
+  } catch (error) {
+    console.error("❌ Google login failed:", error.response?.data || error);
+  }
+};
 
   const handleLogIn = async (data) => {
     try {
