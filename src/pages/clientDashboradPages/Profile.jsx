@@ -14,6 +14,7 @@ import {
 import useCurrentUser from "../../hooks/useCurrentUser";
 import LoadingPage from "../../components/shared/LoadingPage";
 import useAxios from "../../api/useAxios";
+import toast from "react-hot-toast";
 
 const Profile = () => {
   const axiosApi = useAxios();
@@ -76,7 +77,7 @@ const Profile = () => {
       setUserData({ ...userData, name: newName });
       setEditName(false);
       await axiosApi.patch(`/users/${user._id}`, { userName: newName });
-      alert("Name updated successfully!");
+      toast.success("Name updated successfully!");
     } catch (err) {
       console.error("Failed to update name:", err);
       alert("Failed to update name");
@@ -96,7 +97,7 @@ const Profile = () => {
 
       try {
         await axiosApi.patch(`/users/${user._id}`, { userImage: base64Image });
-        alert("Photo updated successfully!");
+        toast.success("Photo updated successfully!");
       } catch (err) {
         console.error("Failed to update photo:", err);
         alert("Failed to update photo");

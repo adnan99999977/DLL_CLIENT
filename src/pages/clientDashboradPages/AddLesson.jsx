@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import LoadingPage from "../../components/shared/LoadingPage";
 import useAxios from "../../api/useAxios";
+import toast from "react-hot-toast";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -60,7 +61,7 @@ const AddLesson = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(["lessons"]);
       queryClient.invalidateQueries(["myLessons"]);
-      alert("✅ Lesson added successfully");
+      toast.success(" Lesson added successfully");
       reset();
       setImageURL(null);
       setFileName("Choose an image");
@@ -287,7 +288,7 @@ const AddLesson = () => {
               whileTap={{ scale: 0.97 }}
               className="w-full mt-6 sm:mt-10 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 sm:py-4 rounded-3xl font-bold text-base sm:text-lg shadow-lg hover:shadow-2xl transition"
             >
-              {addLessonMutation.isLoading ? "Publishing..." : "Publish Lesson 🚀"}
+              {addLessonMutation.isLoading ? "Publishing..." : "Publish Lesson "}
             </motion.button>
           </form>
         </motion.div>

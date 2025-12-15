@@ -7,9 +7,8 @@ import LoadingPage from "../../components/shared/LoadingPage";
 import useAxios from "../../api/useAxios";
 
 const Pricing = () => {
-  const { user, } = useCurrentUser();
-    const axiosApi = useAxios();
-
+  const { user } = useCurrentUser();
+  const axiosApi = useAxios();
 
   const features = [
     { name: "Number of Lessons", free: "10", premium: "Unlimited" },
@@ -75,7 +74,7 @@ const Pricing = () => {
     <>
       {!user.isPremium ? (
         // User is NOT premium → show Upgrade
-        <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 p-6 flex flex-col items-center">
+        <div className="min-h-screen  p-6 flex flex-col items-center">
           <motion.h1
             className="text-4xl md:text-5xl font-extrabold text-indigo-700 mb-12 text-center"
             initial={{ opacity: 0, y: -50 }}
@@ -153,7 +152,7 @@ const Pricing = () => {
         </div>
       ) : (
         // User IS premium → show Already Premium
-        <div className="min-h-screen flex flex-col items-center justify-center text-center px-4 bg-gradient-to-br from-indigo-50 to-purple-50">
+        <div className="min-h-screen flex flex-col items-center justify-center text-center px-4 ">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -161,11 +160,11 @@ const Pricing = () => {
             className="p-8 bg-white/80 backdrop-blur-md shadow-xl rounded-2xl"
           >
             <p className="text-2xl md:text-3xl font-extrabold text-indigo-700 mb-4">
-              ⭐ You’re already a Premium Member!
+              You’re already a Premium Member!
             </p>
             <p className="text-gray-600">
               Enjoy all the premium features and unlimited lessons. Keep
-              learning 🚀
+              learning
             </p>
           </motion.div>
         </div>

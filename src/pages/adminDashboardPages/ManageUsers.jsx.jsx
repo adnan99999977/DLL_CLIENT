@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import LoadingPage from "../../components/shared/LoadingPage";
 import useDbData from "../../hooks/useDbData";
 import useAxios from "../../api/useAxios";
+import toast from "react-hot-toast";
 
 const PROTECTED_ADMIN_EMAIL = "admin@gmail.com";
 
@@ -60,7 +61,7 @@ const ManageUsers = () => {
     try {
       await axiosApi.delete(`/users/${id}`);
       setLocalUsers((prev) => prev.filter((u) => u._id !== id));
-      alert("User deleted successfully");
+      toast.success("User deleted successfully");
     } catch (err) {
       console.error("Failed to delete user:", err);
       alert("Failed to delete user");

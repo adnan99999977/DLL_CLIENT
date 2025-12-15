@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../auth/AuthContext";
 import { useForm } from "react-hook-form";
 import useImageUpload from "../hooks/useImageUpload";
@@ -21,6 +21,10 @@ const Register = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const { setUser, updateUser, registerUser, signInViaGoogle } =
     useContext(AuthContext);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/";
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -52,8 +56,8 @@ const Register = () => {
       // Check if user already exists in DB
       const res = await axiosApi.post("/users/google", googleUserData);
 
-      console.log("✅ Google user DB response:", res.data);
-      alert("Google login successful!");
+      toast.success("Successfully Register !");
+      navigate(from, { replace: true });
 
       // Optionally set user to context/localStorage
       localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -75,22 +79,19 @@ const Register = () => {
     try {
       const { confirmPassword, ...userData } = data;
 
-      // 1️⃣ Create user in Firebase Auth
       const userCredential = await registerUser(
         userData.email,
         userData.password
       );
       const currentUser = userCredential.user;
 
-      // 2️⃣ Update Firebase Profile
       await updateUser(currentUser, {
         displayName: userData.userName,
         photoURL: imageURL,
       });
 
-      // 3️⃣ Prepare user object for DB (same as Google login)
       const registrationData = {
-        uid: currentUser.uid, // Firebase UID
+        uid: currentUser.uid,
         name: userData.userName,
         email: userData.email,
         photoURL: imageURL,
@@ -103,13 +104,11 @@ const Register = () => {
         updatedAt: new Date(),
       };
 
-      // 4️⃣ Save to DB
       const res = await axiosApi.post("/users", registrationData);
 
-      console.log("✅ Registration DB response:", res.data);
-      alert("Registration successful!");
+      toast.success("Successfully Register !");
+      navigate(from, { replace: true });
 
-      // 5️⃣ Set user in context/localStorage (same as Google login)
       setUser(res.data.user);
       localStorage.setItem("user", JSON.stringify(res.data.user));
     } catch (err) {

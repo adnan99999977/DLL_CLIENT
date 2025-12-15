@@ -161,6 +161,7 @@ const PublicLessonsDetails = () => {
     try {
       await axiosApi.patch(`/lessons/${lesson._id}/like`);
       setIsLiked(true);
+      toast.success('Liked Story')
       queryClient.invalidateQueries(["lesson", id]);
     } catch (err) {
       console.error(err);

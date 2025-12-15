@@ -57,15 +57,15 @@ const handleDeleteFav = async (id) => {
     );
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-indigo-50 to-purple-50">
+    <div className="min-h-screen p-6 ">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-6xl mx-auto mb-8"
       >
-        <h1 className="text-4xl font-extrabold text-purple-800 mb-2">
-          My Favorites ⭐
+        <h1 className="text-4xl font-extrabold text-blue-800 mb-2">
+          My Favorites 
         </h1>
         <p className="text-gray-600">View your saved lessons in one place.</p>
       </motion.div>
@@ -100,7 +100,7 @@ const handleDeleteFav = async (id) => {
       {/* Table */}
       <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl overflow-x-auto">
         <table className="min-w-full">
-          <thead className="bg-purple-100 text-purple-800">
+          <thead className="bg-blue-100 text-blue-800">
             <tr>
               <th className="px-6 py-3 text-left">Title</th>
               <th className="px-6 py-3 text-left">Category</th>

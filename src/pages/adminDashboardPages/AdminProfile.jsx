@@ -25,9 +25,17 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import toast from "react-hot-toast";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, Filler);
-
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 const AdminProfile = () => {
   const { user, loading, error } = useCurrentUser();
@@ -50,8 +58,7 @@ const AdminProfile = () => {
   const [newPhoto, setNewPhoto] = useState(userData.photoURL);
   const fileInputRef = useRef(null);
   const triggerFileSelect = () => fileInputRef.current.click();
-          const axiosApi = useAxios();
-
+  const axiosApi = useAxios();
 
   useEffect(() => {
     if (!user) return;
@@ -81,13 +88,12 @@ const AdminProfile = () => {
     );
 
   const handleNameUpdate = async () => {
-
     try {
       setUserData({ ...userData, name: newName });
       setEditName(false);
 
       await axiosApi.patch(`/users/${user._id}`, { userName: newName });
-      alert("Name updated successfully!");
+      toast.success("Name update successfully");
     } catch (err) {
       console.error(err);
       alert("Failed to update name");
@@ -105,7 +111,7 @@ const AdminProfile = () => {
 
       try {
         await axiosApi.patch(`/users/${user._id}`, { userImage: base64Image });
-        alert("Photo updated successfully!");
+        toast.success("Photo updated successfully!");
       } catch (err) {
         console.error(err);
         alert("Failed to update photo");
@@ -222,9 +228,7 @@ const AdminProfile = () => {
 
       {/* Recent Lessons */}
       <div className="max-w-5xl mx-auto mt-12">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
-         All Lessons
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">All Lessons</h2>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
