@@ -10,7 +10,7 @@ const useAxios = () => {
 
   const axiosInstance = useMemo(() => {
     const instance = axios.create({
-      baseURL: "http://localhost:5000",
+      baseURL: "https://dll-server.vercel.app",
       headers: { "Content-Type": "application/json" },
     });
 
