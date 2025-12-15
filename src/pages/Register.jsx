@@ -6,6 +6,7 @@ import { AuthContext } from "../auth/AuthContext";
 import { useForm } from "react-hook-form";
 import useImageUpload from "../hooks/useImageUpload";
 import useAxios from "../api/useAxios";
+import toast from "react-hot-toast";
 
 const Register = () => {
   const { imageURL, isUploading, fileName, uploadFile } = useImageUpload();

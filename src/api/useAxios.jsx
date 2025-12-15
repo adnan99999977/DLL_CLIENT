@@ -1,4 +1,3 @@
-// hooks/useAxios.js
 import { useContext, useMemo } from "react";
 import axios from "axios";
 import { AuthContext } from "../auth/AuthContext";
@@ -14,12 +13,16 @@ const useAxios = () => {
       headers: { "Content-Type": "application/json" },
     });
 
-    // attach token automatically
     instance.interceptors.request.use(
       async (config) => {
-        if (user) {
-          const token = await auth.currentUser.getIdToken();
-          config.headers.Authorization = `Bearer ${token}`;
+        try {
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            const token = await currentUser.getIdToken();
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } catch (err) {
+          console.warn("No user logged in, skipping token", err);
         }
         return config;
       },

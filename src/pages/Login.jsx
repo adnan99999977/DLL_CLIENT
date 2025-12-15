@@ -12,10 +12,8 @@ const Login = () => {
   const [showPass, setShowPass] = useState(false);
   const [message, setMessage] = useState("");
   const axiosApi = useAxios();
-
   const navigate = useNavigate();
   const location = useLocation();
-
   const from = location.state?.from || "/";
 
   const {
@@ -45,33 +43,33 @@ const Login = () => {
       };
 
       const res = await axiosApi.post("/users/google", googleUserData);
-
       localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      toast.success("Successfully Logged In !");
+      toast.success("Successfully Logged In!");
       navigate(from, { replace: true });
     } catch (error) {
       console.error("Google login failed:", error);
+      const msg = error.response?.data?.message || "Google login failed";
+      toast.error(msg);
     }
   };
 
   // ================= EMAIL LOGIN =================
   const handleLogIn = async (data) => {
     try {
+      // Sign in with Firebase first
+      await signInUser(data.email, data.password);
+
+      // Then fetch backend user
       const response = await axiosApi.post("/login", {
         email: data.email,
         password: data.password,
       });
 
       localStorage.setItem("user", JSON.stringify(response.data.user));
-
-      await signInUser(data.email, data.password);
-      
+      toast.success("Successfully Logged In!");
       navigate(from, { replace: true });
-      toast.success("Successfully Logged In !");
     } catch (err) {
       console.error(err);
-      setMessage(err.response?.data?.message || "Login failed");
     }
   };
 
