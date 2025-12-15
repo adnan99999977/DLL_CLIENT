@@ -124,7 +124,7 @@ const Profile = () => {
         {/* Avatar */}
         <div className="relative group w-36 h-36 mx-auto">
           <img
-            src={newPhoto || userData?.photoURL || "/default-avatar.png"}
+            src={newPhoto || userData?.photoURL }
             alt="Profile"
             className="w-full h-full rounded-full object-cover"
           />

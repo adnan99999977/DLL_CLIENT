@@ -10,23 +10,23 @@ const Payment = () => {
   const sessionId = searchParams.get("session_id");
   const axiosApi = useAxios();
 
- useEffect(() => {
+  useEffect(() => {
+    const fetchPaymentData = async () => {
+      if (!sessionId) return;
+      try {
+        const res = await axiosApi.get(
+          `/payment-success?session_id=${sessionId}`
+        );
+        setPaymentData(res.data);
 
-  const fetchPaymentData = async () => {
-    if (!sessionId) return;
-    try {
-      const res = await axiosApi.get(`/payment-success?session_id=${sessionId}`);
-      setPaymentData(res.data);
-
-      // Update localStorage or React Context
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-    } catch (err) {
-      console.error("Payment fetch error:", err);
-    }
-  };
-  fetchPaymentData();
-}, [sessionId]);
-
+        // Update localStorage or React Context
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+      } catch (err) {
+        console.error("Payment fetch error:", err);
+      }
+    };
+    fetchPaymentData();
+  }, [sessionId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center px-4 py-20">
@@ -82,27 +82,6 @@ const Payment = () => {
         <p className="text-gray-600 mb-6">
           Thank you for your purchase. Your premium access has been activated.
         </p>
-
-        {/* Payment Summary */}
-        {paymentData && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-left">
-            <p className="text-gray-700 font-medium">
-              <span className="font-semibold">Amount:</span> $
-              {paymentData.amount}
-            </p>
-            <p className="text-gray-700 font-medium">
-              <span className="font-semibold">Plan:</span> {paymentData.plan}
-            </p>
-            <p className="text-gray-700 font-medium">
-              <span className="font-semibold">Transaction ID:</span>{" "}
-              {paymentData.transactionId}
-            </p>
-            <p className="text-gray-700 font-medium">
-              <span className="font-semibold">Purchaser Email:</span>{" "}
-              {paymentData.userEmail}
-            </p>
-          </div>
-        )}
 
         {/* Buttons */}
         <div className="flex flex-col gap-4">

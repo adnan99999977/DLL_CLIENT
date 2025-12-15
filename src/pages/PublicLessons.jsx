@@ -16,7 +16,7 @@ const PublicLessons = () => {
   const [toneFilter, setToneFilter] = useState("All");
   const [sortOption, setSortOption] = useState("Newest");
   const [currentPage, setCurrentPage] = useState(1);
-  const lessonsPerPage = 8; // Number of lessons per page
+  const lessonsPerPage = 8;
 
   const {
     data: lessons = [],
@@ -123,13 +123,27 @@ const PublicLessons = () => {
       {/* Lessons Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {paginatedLessons.map((lesson) => {
-         const isLocked = lesson.accessLevel === "Premium" && !(user?.isPremium);
+          const isLocked =
+            lesson.accessLevel === "Premium" && !user?.isPremium;
 
           return (
             <div
               key={lesson._id}
               className="relative flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300"
             >
+              {/* 🔒 LOCK OVERLAY (UI ONLY) */}
+              {isLocked && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 text-white text-center px-4">
+                  <Lock size={36} className="mb-2" />
+                  <p className="text-sm font-semibold">
+                    Premium Content
+                  </p>
+                  <p className="text-xs opacity-90 mt-1">
+                    Upgrade to unlock this lesson
+                  </p>
+                </div>
+              )}
+
               <div
                 className={`w-full h-44 overflow-hidden ${
                   isLocked ? "filter blur-sm brightness-75" : ""
@@ -151,7 +165,9 @@ const PublicLessons = () => {
               <div className="flex-1 p-5 flex flex-col justify-between">
                 <h2
                   className={`font-semibold text-lg text-gray-800 mb-2 cursor-pointer hover:text-blue-600 ${
-                    isLocked ? "cursor-not-allowed blur-sm brightness-75" : ""
+                    isLocked
+                      ? "cursor-not-allowed blur-sm brightness-75"
+                      : ""
                   }`}
                 >
                   {lesson.title}

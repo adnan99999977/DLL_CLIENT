@@ -11,7 +11,7 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-
+  console.log(user)
   // Close dropdown if click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -142,7 +142,7 @@ const Navbar = () => {
                 className="flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-gray-300 hover:border-blue-500 transition-transform hover:scale-105 shadow-sm focus:outline-none"
               >
                 <img
-                  src={user?.photoURL || "/default-avatar.png"}
+                  src={user?.photoURL}
                   alt="User Avatar"
                   className="w-full h-full object-cover"
                 />

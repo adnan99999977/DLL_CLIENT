@@ -5,7 +5,6 @@ import { Bookmark } from "lucide-react";
 
 const MostSavedLessons = () => {
   const { allFavorites, loading } = useCurrentUserFav();
-  console.log(allFavorites);
 
   if (loading) return <p className="text-center py-10">Loading...</p>;
   if (!allFavorites || allFavorites.length === 0)
@@ -80,8 +79,8 @@ const MostSavedLessons = () => {
               {/* Footer */}
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-sm flex gap-3 text-gray-700">
-                   <Bookmark className="size-5" />
-                   {lesson.savedCount} Saves
+                  <Bookmark className="size-5" />
+                  {lesson.savedCount} Saves
                 </span>
               </div>
             </div>
