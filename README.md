@@ -1,7 +1,7 @@
 # Digital Life Lessons – Frontend
 
 **Live Website:**  
-[https://digital-life-lessons.web.app](https://digital-life-lesson-28f26.web.app/)  
+https://digital-life-lesson-28f26.web.app/
 
 
 ---
