@@ -1,16 +1,124 @@
-# React + Vite
+# Digital Life Lessons – Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Live Website:**  
+[https://digital-life-lessons.web.app](https://digital-life-lesson-28f26.web.app/)  
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## About the Project
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Digital Life Lessons is a modern, full-featured web platform where users can create, preserve, and explore meaningful life lessons. The platform encourages self-reflection, personal growth, and community learning through both free and premium content.
 
-## Expanding the ESLint configuration
+This frontend application is built with a clean user interface, smooth interactions, and secure authentication to ensure a high-quality and professional user experience across all devices.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## Key Features
+
+- Secure authentication system using Firebase  
+  - Email and password based login  
+  - Google authentication support  
+
+- Life lesson creation and management  
+  - Create, update, and delete lessons  
+  - Assign category and emotional tone  
+  - Control visibility (public or private)  
+  - Control access level (free or premium)  
+
+- Public lessons browsing system  
+  - Search lessons by title or keyword  
+  - Filter lessons by category and emotional tone  
+  - Sort lessons by newest or most saved  
+  - Pagination for better performance  
+
+- Premium content handling  
+  - Premium lessons are blurred for free users  
+  - Upgrade prompt shown for locked content  
+  - Seamless upgrade experience  
+
+- User engagement features  
+  - Like and unlike lessons with real-time updates  
+  - Save lessons to favorites  
+  - Comment system for logged-in users  
+  - Report inappropriate or misleading lessons  
+  - Social media sharing support  
+
+- Stripe payment integration  
+  - One-time lifetime premium purchase  
+  - Secure Stripe Checkout  
+  - Payment success and cancellation handling  
+
+- User dashboard  
+  - Total lessons created  
+  - Total saved favorites  
+  - Recently added lessons  
+  - Quick access to important actions  
+  - Basic analytics overview  
+
+- Role-based dashboard system  
+  - Separate user and admin dashboards  
+  - Admin moderation and management tools  
+
+- Professional UI and UX  
+  - Consistent typography and color system  
+  - Uniform button styles  
+  - Balanced spacing and alignment  
+  - Smooth animations using Framer Motion  
+
+- Loading and feedback states  
+  - Global loading spinner  
+  - Lottie animations for enhanced feedback  
+  - Toast and modal-based notifications  
+
+---
+
+## Technologies Used
+
+- React.js  
+- React Router DOM  
+- Firebase Authentication  
+- Tailwind CSS  
+- Framer Motion  
+- Axios  
+- Stripe Checkout  
+- SweetAlert and Toast Notifications  
+- Lottie React  
+- JWT-based secure API communication  
+
+---
+
+## Project Highlights
+
+- All frontend routes are reload-safe  
+- No private route crashes on refresh  
+- Environment variables are properly secured  
+- No default browser alerts are used  
+- Fully responsive for mobile, tablet, and desktop  
+- Clean and meaningful GitHub commit history with more than 20 commits  
+
+---
+
+## User Roles
+
+- Free User  
+  - Can access all public free lessons  
+
+- Premium User  
+  - Can access both free and premium public lessons  
+  - Can create premium lessons  
+
+- Admin  
+  - Can monitor platform activity  
+  - Can moderate users and lessons  
+  - Can manage featured and reported content  
+
+---
+
+## UI Design Philosophy
+
+- Equal height and width cards across all sections  
+- Grid-based layout for visual consistency  
+- Consistent heading styles across the application  
+- Balanced spacing for readability  
+- Accessibility-focused and modern design approach
